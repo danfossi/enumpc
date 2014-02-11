@@ -4,8 +4,8 @@
 # version		: 0.1.0
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
-#				: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
-#				: cmd.exe /c @powershell -Noexit <path>\<to>\<script>.ps1
+#			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
+#			: cmd.exe /c @powershell -Noexit <path>\<to>\<script>.ps1
 ###########################################################
 
 Write-Host -ForegroundColor Green -NoNewline "Running script, please wait.."
@@ -34,7 +34,7 @@ else
 if ($win_is_compatible -match "True"){
 "             * Architecture: " + (Get-WmiObject Win32_OperatingSystem).OSArchitecture
 }
-$lastboot = Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastBootUpTime';EXPRESSION={$_.ConverttoDateTime($_.lastbootuptime)}}
+		$lastboot = Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastBootUpTime';EXPRESSION={$_.ConverttoDateTime($_.lastbootuptime)}}
 "             * Last boot   : " + $lastboot.lastbootuptime
 if ($win_is_compatible -match "True"){
 "             * PowerShell  : " + (Get-ExecutionPolicy)
@@ -81,7 +81,7 @@ foreach($objItem in $colItems) {
 	" "
 	"            ** Mac Address : " + $($objItem.MACAddress)
 	" "
-    "            ** DHCP Enabled: " + $($objItem.DHCPEnabled)
+    	"            ** DHCP Enabled: " + $($objItem.DHCPEnabled)
 	"            ** DHCP Server : " + $($objItem.DHCPServer)
 
 	" "		  
