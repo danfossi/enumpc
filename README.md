@@ -3,7 +3,7 @@ Enumerate local machine using powershell 1.0
 
 ## Prerequisites
 - You need to have powershell installed
-- Your ExecutionPolicy must be different from Restricted os AllSigned (see: http://technet.microsoft.com/en-us/library/ee176961.aspx)
+- Your ExecutionPolicy must be different from Restricted or AllSigned (see: http://technet.microsoft.com/en-us/library/ee176961.aspx)
 - Must have Administrators rights
 
 ## Usage
