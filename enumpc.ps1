@@ -34,7 +34,7 @@ else
 if ($win_is_compatible -match "True"){
 "* Architecture : " + (Get-WmiObject Win32_OperatingSystem).OSArchitecture
 }
-		$lastboot = Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastBootUpTime';EXPRESSION={$_.ConverttoDateTime($_.lastbootuptime)}}
+$lastboot = Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastBootUpTime';EXPRESSION={$_.ConverttoDateTime($_.lastbootuptime)}}
 "* Last boot    : " + $lastboot.lastbootuptime
 if ($win_is_compatible -match "True"){
 "* PowerShell   : " + (Get-ExecutionPolicy)
