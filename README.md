@@ -22,3 +22,4 @@ Enumerate local machine using powershell 1.0
 * Get more info on user that run script (UAC, Group)
 * Enumerate printer (driver, port)
 * Get installed software (microsoft update are excluded)
+* Get firewall profiles rules
