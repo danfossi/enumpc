@@ -118,7 +118,7 @@ else
    "              * Group      : Users"
 }
 	if ($win_is_compatible -match "True"){
-"             * UAC         : " + (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA
+"             * UAC        : " + (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA
 }
 " "
 
