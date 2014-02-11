@@ -108,14 +108,14 @@ foreach ($Computer in $ComputerName) {
 $net = New-Object -comobject Wscript.Network
 $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
 $WindowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($CurrentUser)
-"             * Username    : "  + $($net.username)
+"             * Username   : "  + $($net.username)
 if ($WindowsPrincipal.IsInRole("Administrators"))
 {
-    "             * Group       : Administators"
+    "             * Group      : Administators"
 }
 else
 {
-   "              * Group       : Users"
+   "              * Group      : Users"
 }
 	if ($win_is_compatible -match "True"){
 "             * UAC         : " + (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA
