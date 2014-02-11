@@ -29,15 +29,15 @@ else
 
 "== System Info == "
 "=== OS === "
-"* OS Version  : " + (Get-WmiObject -class Win32_OperatingSystem).Caption
-"* Installed on: " + ([WMI]'').ConvertToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate) 
+"* OS Version   : " + (Get-WmiObject -class Win32_OperatingSystem).Caption
+"* Installed on : " + ([WMI]'').ConvertToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate) 
 if ($win_is_compatible -match "True"){
-"* Architecture: " + (Get-WmiObject Win32_OperatingSystem).OSArchitecture
+"* Architecture : " + (Get-WmiObject Win32_OperatingSystem).OSArchitecture
 }
 		$lastboot = Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastBootUpTime';EXPRESSION={$_.ConverttoDateTime($_.lastbootuptime)}}
-"* Last boot   : " + $lastboot.lastbootuptime
+"* Last boot    : " + $lastboot.lastbootuptime
 if ($win_is_compatible -match "True"){
-"* PowerShell  : " + (Get-ExecutionPolicy)
+"* PowerShell   : " + (Get-ExecutionPolicy)
 }
 " "
 
@@ -48,13 +48,13 @@ if ($win_is_compatible -match "True"){
 
 "=== CPU(s) === "
 $cpu = Get-WmiObject -class win32_processor
-"* CPU Type    : " + $($cpu.caption)
-"* CPU Speed   : " + $($cpu.CurrentClockSpeed) + " MHz"
+"* CPU Type     : " + $($cpu.caption)
+"* CPU Speed    : " + $($cpu.CurrentClockSpeed) + " MHz"
 " "
 
 "=== RAM === "
 $ram = Get-WmiObject -Class Win32_ComputerSystem
-"* RAM         : " + ([math]::Round($ram.TotalPhysicalMemory / 1gb,2)) + "Gb"
+"* RAM          : " + ([math]::Round($ram.TotalPhysicalMemory / 1gb,2)) + "Gb"
 " "
 
 $disks = Get-WmiObject Win32_LogicalDisk
