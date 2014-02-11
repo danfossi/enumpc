@@ -70,7 +70,7 @@ foreach ($disk in $disks) {
 
 "== Network Info == "
 $strComputer ="."
-$colItems = Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where{$_.IPEnabled -eq “True”}
+$colItems = Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where{$_.IPEnabled -eq "True"}
 foreach($objItem in $colItems) {
 "* Interface: " + $($objItem.Description)
 "** IP Address  : " + $($objItem.IPAddress[0])
