@@ -1,13 +1,14 @@
-# description		: Script to enumerate local machine
+# description	: Script to enumerate local machine
 # author(s)		: Dennis Anfossi
 # date			: 11.02.2014
 # version		: 0.1.2
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
-#			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
-#			: cmd.exe /c @powershell -Noexit <path>\<to>\<script>.ps1
+#				: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
+#				: cmd.exe /c @powershell -Noexit <path>\<to>\<script>.ps1
 ###########################################################
 
+Clear-Host
 Write-Host -ForegroundColor Green -NoNewline "Running script, please wait.."
 $hostname = Invoke-Command -ScriptBlock {hostname}
 $enum_os=([Environment]::OSVersion)
@@ -67,7 +68,6 @@ foreach ($disk in $disks) {
 " "
 }
 
-
 "== Network Info == "
 $strComputer ="."
 $colItems = Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where{$_.IPEnabled -eq “True”}
@@ -108,7 +108,9 @@ foreach ($Computer in $ComputerName) {
 $net = New-Object -comobject Wscript.Network
 $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
 $WindowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($CurrentUser)
-"* Username   : "  + $($net.username)
+$homeItems = (Get-ChildItem $($home) -recurse | Measure-Object -property length -sum)
+"* Username   : " + $($net.username)
+"* Prof. Size : " + "{0:N2}" -f ($homeItems.sum / 1GB) + " Gb"
 if ($WindowsPrincipal.IsInRole("Administrators"))
 {
 "* Group      : Administators"
@@ -146,8 +148,14 @@ $listsoft = Get-WmiObject -Class Win32_Product | Select-Object -Property Name | 
 foreach ($instsoft in $listsoft) {
 "* " + $($instsoft.name)
 }
+" "
+
+"== Firewall Config =="
+"=== Current Config ==="
+netsh.exe advfirewall monitor show firewall
 
 " "
 "****************************************************************************"
 " "
+
 Write-Host -ForegroundColor Green "done!"
