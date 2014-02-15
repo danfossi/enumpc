@@ -138,8 +138,8 @@ foreach($mapItem in $netItems) {
 "== Printers =="
 $printItems = Get-WMIObject -class Win32_Printer | Select Name,DriverName,PortName
 foreach($instPrinter in $printItems) {
-"* " + $($instPrinter.PortName)
-"** " + $($instPrinter.name) + ": " + $($instPrinter.DriverName )
+"* " + $($instPrinter.Name)
+"** " + $($instPrinter.PortName) + ": " + $($instPrinter.DriverName )
 " "
 }
 
