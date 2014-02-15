@@ -18,7 +18,6 @@ oStream.type = adTypeBinary
 oStream.open
 oStream.write xml.responseBody
 
-' Do not overwrite an existing file
 oStream.savetofile DestFolder & "\" & ImageFile, adSaveCreateOverWrite
 
 oStream.Close
@@ -27,7 +26,6 @@ wscr.Popup "Download Completed!",4
 
 set oStream = nothing
 Set xml = Nothing
-
 
 wscr.Popup "Running Script..",4
 
