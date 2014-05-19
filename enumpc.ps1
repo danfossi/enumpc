@@ -1,7 +1,7 @@
 # description		: Script to enumerate local machine
 # author(s)		: Dennis Anfossi
-# date			: 11.02.2014
-# version		: 0.1.2
+# date			: 19.05.2014
+# version		: 0.1.3
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
 #			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
@@ -43,23 +43,26 @@ if ($win_is_compatible -match "True"){
 " "
 
 if ($win_is_compatible -match "True"){
-"=== Restore Point ==="
+"=== Restore Point(s) ==="
  get-computerrestorepoint | format-table @{Label="Date"; Expression={$_.ConvertToDateTime($_.CreationTime)}}, Description
 }
 
 "=== CPU(s) === "
-$cpu = Get-WmiObject -class win32_processor
+$cpus = Get-WmiObject -class win32_processor
+
+foreach ($cpu in $cpus) {
 "* CPU Type     : " + $($cpu.caption)
 "* CPU Speed    : " + $($cpu.CurrentClockSpeed) + " MHz"
 " "
+}
 
 "=== RAM === "
 $ram = Get-WmiObject -Class Win32_ComputerSystem
 "* RAM          : " + ([math]::Round($ram.TotalPhysicalMemory / 1gb,2)) + "Gb"
 " "
 
-$disks = Get-WmiObject Win32_LogicalDisk
 "=== Disk(s) ==="
+$disks = Get-WmiObject Win32_LogicalDisk
 foreach ($disk in $disks) {
 "* " + $disk.DeviceID + " (S/N: " + $($disk.VolumeSerialNumber) + ")"
 "** FileSystem  : " + $($disk.FileSystem)
@@ -109,11 +112,12 @@ $net = New-Object -comobject Wscript.Network
 $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
 $WindowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($CurrentUser)
 $homeItems = (Get-ChildItem $($home) -recurse | Measure-Object -property length -sum)
+$mailaccounts = Get-ChildItem HKCU:\Software\Microsoft\Windows\CurrentVersion\UnreadMail\
 "* Username   : " + $($net.username)
 "* Prof. Size : " + "{0:N2}" -f ($homeItems.sum / 1GB) + " Gb"
 if ($WindowsPrincipal.IsInRole("Administrators"))
 {
-"* Group      : Administators"
+"* Group      : Administrators"
 }
 else
 {
@@ -124,6 +128,13 @@ else
 }
 " "
 
+if ($mailaccounts) {
+"==== Mail Address ===="
+foreach ($mailaccount in $mailaccounts) {
+"* Mail used : " + $mailaccount -replace "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\",""
+}
+""
+}
 
 $netItems = Get-WmiObject -Class Win32_MappedLogicalDisk | select Name, ProviderName
 if ($netItems){
