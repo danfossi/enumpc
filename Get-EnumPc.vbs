@@ -5,29 +5,25 @@ ImageFile = "enumpc.ps1"
 DestFolder = strDesktop
 URL = "https://raw.github.com/danfossi/enumpc/master/enumpc.ps1"
 
-Set xml = CreateObject("Microsoft.XMLHTTP")
-xml.Open "GET", URL, False
-xml.Send
+wscr.Popup "Download Script..",4
+wget = "bitsadmin /transfer " & Chr(34) & "Download_Enumpc" & Chr(34) & " " & Chr(34) & URL & Chr(34) & " " & Chr(34) & DestFolder & "\" & "enumpc.ps1" & Chr(34)
+wscr.Run wget,0
 
-set oStream = createobject("Adodb.Stream")
-Const adTypeBinary = 1
-Const adSaveCreateOverWrite = 2
-Const adSaveCreateNotExist = 1
+Set svc=getobject("winmgmts:root\cimv2")
+sQuery="select * from win32_process where name='bistadmin.exe'"
+Set cproc=svc.execquery(sQuery)
+iniproc=cproc.count
+Do While iniproc = 1
+    wscript.sleep 5000
+    set svc=getobject("winmgmts:root\cimv2")
+    sQuery="select * from win32_process where name='bistadmin.exe'"
+    set cproc=svc.execquery(sQuery)
+    iniproc=cproc.count
+Loop
+Set cproc=nothing
+Set svc=Nothing
 
-oStream.type = adTypeBinary
-oStream.open
-oStream.write xml.responseBody
-
-oStream.savetofile DestFolder & "\" & ImageFile, adSaveCreateOverWrite
-
-oStream.Close
-
-wscr.Popup "Download Completed!",4
-
-set oStream = nothing
-Set xml = Nothing
-
-wscr.Popup "Running Script..",4
+wscr.Popup "Download completed! Runnig script..",4
 
 enumpc = "powershell.exe -noexit -ExecutionPolicy unrestricted " & Chr(34) & DestFolder & "\" & "enumpc.ps1" & Chr(34)
 
