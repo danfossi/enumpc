@@ -24,3 +24,4 @@ Enumerate local machine using powershell 1.0
 * Enumerate Printer (name, driver and port)
 * Get a list of installed software (microsoft update are excluded)
 * Get firewall profiles rules
+* Try to enumerate mail account reading ureadmail key in regedit
