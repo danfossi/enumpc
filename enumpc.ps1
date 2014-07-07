@@ -1,7 +1,7 @@
 # description		: Script to enumerate local machine
 # author(s)		: Dennis Anfossi
-# date			: 19.05.2014
-# version		: 0.1.3
+# date			: 07.07.2014
+# version		: 0.1.4
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
 #			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
