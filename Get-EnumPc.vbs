@@ -1,5 +1,6 @@
 Set fso = WScript.CreateObject("Scripting.Filesystemobject")
 set wscr = WScript.CreateObject("WScript.Shell")
+Set Net = CreateObject("Wscript.Network")
 strDesktop = wscr.SpecialFolders("Desktop")
 ImageFile = "enumpc.ps1"
 DestFolder = strDesktop
@@ -25,6 +26,6 @@ Set svc=Nothing
 
 wscr.Popup "Download completed! Runnig script..",4
 
-enumpc = "powershell.exe -noexit -ExecutionPolicy unrestricted " & Chr(34) & DestFolder & "\" & "enumpc.ps1" & Chr(34)
+enumpc = "powershell.exe -noexit -ExecutionPolicy unrestricted " & Chr(34) & DestFolder & "\" & "enumpc.ps1" & Chr(34) & " |  out-file -filepath " & Chr(34) & DestFolder & "\" & Net.ComputerName & ".txt" & Chr(34)
 
 wscr.Run enumpc
