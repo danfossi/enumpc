@@ -1,7 +1,7 @@
 # description		: Script to enumerate local machine
 # author(s)		: Dennis Anfossi
-# date			: 07.07.2014
-# version		: 0.1.4
+# date			: 10.12.2015
+# version		: 0.1.5
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
 #			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
@@ -310,29 +310,18 @@ foreach($objItem in $colItems) {
 " "		  
 }
 
-"== Account Info =="
-[string[]]$ComputerName = $hostname
-foreach ($Computer in $ComputerName) {
-    $Results = @()
-    ([adsi]"WinNT://$Computer").psbase.Children | ? {$_.SchemaClassName -eq 'Group'} | % {
-        foreach ($Member in $($_.psbase.invoke('members'))) {
-            $Results += New-Object -TypeName PSCustomObject -Property @{
-                name = $Member.GetType().InvokeMember("Name", 'GetProperty', $null, $Member, $null) 
-                class = $Member.GetType().InvokeMember("Class", 'GetProperty', $null, $Member, $null) 
-                path = $Member.GetType().InvokeMember("ADsPath", 'GetProperty', $null, $Member, $null)
-                group = $_.psbase.name
-            } | ? {($_.Class -eq 'User') -and ([regex]::Matches($_.Path,'/').Count -eq 4)}
-        }
-    }
-    $Results | Group-Object Name | Select-Object Name,@{name='Group(s)';expression={$_.Group | % {$_.Group}}}
-}
 " "	
 "=== Current Account ==="
 $net = New-Object -comobject Wscript.Network
 $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
 $WindowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($CurrentUser)
 $homeItems = (Get-ChildItem $($home) -recurse | Measure-Object -property length -sum)
-$mailaccounts = Get-ChildItem HKCU:\Software\Microsoft\Windows\CurrentVersion\UnreadMail\
+
+if (Test-Path HKCU:\Software\Microsoft\Windows\CurrentVersion\UnreadMail\)
+{
+   $mailaccounts = Get-ChildItem HKCU:\Software\Microsoft\Windows\CurrentVersion\UnreadMail\
+}
+
 "* Username   : " + $($net.username)
 "* Prof. Size : " + "{0:N2}" -f ($homeItems.sum / 1GB) + " Gb"
 if ($WindowsPrincipal.IsInRole("Administrators"))
