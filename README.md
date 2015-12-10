@@ -1,5 +1,5 @@
 # enumpc
-Enumerate local machine using powershell 1.0
+Enumerate local machine using PowerShell
 
 ## Prerequisites
 - You must have PowerShell installed
@@ -19,8 +19,7 @@ Enumerate local machine using powershell 1.0
 * Get Restore Point infos (Windows 7 or above)
 * Get Machine Info (RAM, CPU, HDD)
 * Get Network Info (network interface, IPv4 info, MAC address)
-* Enumerate Local Group/Account and associate it
-* Get more info on user that run script (UAC, Group)
+* Get more info on user that run script (UAC, Group, Size)
 * Enumerate Printer (name, driver and port)
 * Get a list of installed software (microsoft update are excluded)
 * Get firewall profiles rules
