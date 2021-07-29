@@ -100,7 +100,7 @@ foreach ($adapter in $adapters){
 	"** Netmask: " + $netmask.PrefixLength
 	"** Gateway: " + ($adapter |Get-NetIPConfiguration).IPv4DefaultGateway.NextHop
 	"** DNS: " + $dns.ServerAddresses
-	"** Domain: " + $domain.CsWorkgroup
+	"** Domain: " + $domain
 	"** MAC Address: " + $adapter.MacAddress -replace "-",":"
 	"** Profile Type: " + ($adapter | Get-NetConnectionProfile).NetworkCategory
 	"** WOL Enabled: " + ($adapter | Get-NetAdapterAdvancedProperty -RegistryKeyword "*WakeOnMagicPacket").RegistryValue 2>$null
