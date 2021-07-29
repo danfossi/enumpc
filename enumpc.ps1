@@ -47,7 +47,7 @@ if ($win_is_compatible -match "True"){
 " "
 
 if ($win_is_compatible -match "True"){
-	$restore_points = get-computerrestorepoint 2>&1>$null
+	$restore_points = get-computerrestorepoint 2>$null
 	if ($restore_points){
 		"=== Restore Point(s) ==="
 		foreach ($point in $restore_points) {
@@ -103,7 +103,7 @@ foreach ($adapter in $adapters){
 	"** Domain: " + $domain.CsWorkgroup
 	"** MAC Address: " + $adapter.MacAddress -replace "-",":"
 	"** Profile Type: " + ($adapter | Get-NetConnectionProfile).NetworkCategory
-	"** WOL Enabled: " + ($adapter | Get-NetAdapterAdvancedProperty -RegistryKeyword "*WakeOnMagicPacket").RegistryValue 2>&1>$null
+	"** WOL Enabled: " + ($adapter | Get-NetAdapterAdvancedProperty -RegistryKeyword "*WakeOnMagicPacket").RegistryValue 2>$null
 	"** DHCP: " + ($adapter | Get-NetIPInterface -AddressFamily IPv4).Dhcp
 	if (($adapter | Get-NetIPInterface -AddressFamily IPv4).Dhcp -eq "Enabled"){
 		"** DHCP Server: " + $advanced.DHCPServer
