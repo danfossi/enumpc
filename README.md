@@ -18,9 +18,8 @@ Enumerate local machine using PowerShell
 * Get PowerShell ExecutionPolicy
 * Get Restore Point infos (Windows 7 or above)
 * Get Machine Info (RAM, CPU, HDD)
-* Get Network Info (network interface, IPv4 info, MAC address)
+* Get Network Info (network interface, IPv4 info, MAC address, Profile Type, WakeOnLan status)
 * Get more info on user that run script (UAC, Group, Size)
 * Enumerate Printer (name, driver and port)
 * Get a list of installed software (microsoft update are excluded)
-* Get firewall profiles rules
-* Try to enumerate mail account reading ureadmail key in regedit
+
