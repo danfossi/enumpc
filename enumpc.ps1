@@ -1,11 +1,11 @@
-# description	: Extract PC info
+# description		: Extract PC info
 # author(s)		: Dennis Anfossi
 # date			: 29/04/2021
 # version		: 0.2.0
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
-#				: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
-#				: cmd.exe /c @powershell -Noexit <path>\<to>\<script>.ps1
+#			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
+#			: cmd.exe /c @powershell -Noexit <path>\<to>\<script>.ps1
 ###########################################################
 
 #Clear-Host
@@ -37,12 +37,12 @@ else{
 "* OS Version   : " + (Get-WmiObject -class Win32_OperatingSystem).Caption + " (Build: " + ($ci).WindowsVersion + ")"
 "* Installed on : " + ([WMI]'').ConvertToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate) 
 if ($win_is_compatible -match "True"){
-"* Architecture : " + (Get-WmiObject Win32_OperatingSystem).OSArchitecture
+	"* Architecture : " + (Get-WmiObject Win32_OperatingSystem).OSArchitecture
 }
 $lastboot = Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastBootUpTime';EXPRESSION={$_.ConverttoDateTime($_.lastbootuptime)}}
 "* Last boot    : " + $lastboot.lastbootuptime
 if ($win_is_compatible -match "True"){
-"* PowerShell   : " + (Get-ExecutionPolicy)
+	"* PowerShell   : " + (Get-ExecutionPolicy)
 }
 " "
 
@@ -72,11 +72,11 @@ $ram = Get-WmiObject -Class Win32_ComputerSystem
 "=== Disk(s) ==="
 $disks = Get-WmiObject Win32_LogicalDisk | where {$_.DriveType -ne "5"}
 foreach ($disk in $disks) {
-"* " + $disk.DeviceID + " (S/N: " + $($disk.VolumeSerialNumber) + ")"
-"** FileSystem  : " + $($disk.FileSystem)
-"** Disk Size   : " + $([math]::Round($disk.size / 1gb,2)) + "Gb"
-"** Free space  : " + $([math]::Round($disk.freespace / 1gb,2)) + "Gb"
-" "
+	"* " + $disk.DeviceID + " (S/N: " + $($disk.VolumeSerialNumber) + ")"
+	"** FileSystem  : " + $($disk.FileSystem)
+	"** Disk Size   : " + $([math]::Round($disk.size / 1gb,2)) + "Gb"
+	"** Free space  : " + $([math]::Round($disk.freespace / 1gb,2)) + "Gb"
+	" "
 }
 
 "== Network Info == "
@@ -116,21 +116,20 @@ foreach ($adapter in $adapters){
 
 $netItems = Get-WmiObject -Class Win32_MappedLogicalDisk | select Name, ProviderName
 if ($netItems){
-"== Mapped Drive =="
-
-foreach($mapItem in $netItems) {
-"* " +$($mapItem.Name) + "         : " + $($mapItem.ProviderName)
-}
-" "
-}
+	"== Mapped Drive =="
+	foreach($mapItem in $netItems) {
+		"* " +$($mapItem.Name) + "         : " + $($mapItem.ProviderName)
+		}
+		" "
+	}
 
 $printItems = Get-WMIObject -class Win32_Printer | where {($_.Name -notlike "*ax*") -and ($_.Name -notlike "*PDF*") -and ($_.Name -notlike "*XPS*") -and ($_.Name -notlike "*Note*")} | Select Name,DriverName,PortName
 if ($printItems){
-"== Printers =="
+	"== Printers =="
 	foreach($instPrinter in $printItems) {
-	"* " + $($instPrinter.PortName)
-	"** " + $($instPrinter.name) + ": " + $($instPrinter.DriverName )
-	" "
+		"* " + $($instPrinter.PortName)
+		"** " + $($instPrinter.name) + ": " + $($instPrinter.DriverName )
+		" "
 	}
 }
 
