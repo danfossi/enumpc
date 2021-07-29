@@ -37,17 +37,17 @@ else{
 "* OS Version   : " + (Get-WmiObject -class Win32_OperatingSystem).Caption + " (Build: " + ($ci).WindowsVersion + ")"
 "* Installed on : " + ([WMI]'').ConvertToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate) 
 if ($win_is_compatible -match "True"){
-	"* Architecture : " + (Get-WmiObject Win32_OperatingSystem).OSArchitecture
+"* Architecture : " + (Get-WmiObject Win32_OperatingSystem).OSArchitecture
 }
 $lastboot = Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastBootUpTime';EXPRESSION={$_.ConverttoDateTime($_.lastbootuptime)}}
 "* Last boot    : " + $lastboot.lastbootuptime
 if ($win_is_compatible -match "True"){
-	"* PowerShell   : " + (Get-ExecutionPolicy)
+"* PowerShell   : " + (Get-ExecutionPolicy)
 }
 " "
 
 if ($win_is_compatible -match "True"){
-	$restore_points = get-computerrestorepoint
+	$restore_points = get-computerrestorepoint 2>&1>$null
 	if ($restore_points){
 		"=== Restore Point(s) ==="
 		foreach ($point in $restore_points) {
@@ -72,11 +72,11 @@ $ram = Get-WmiObject -Class Win32_ComputerSystem
 "=== Disk(s) ==="
 $disks = Get-WmiObject Win32_LogicalDisk | where {$_.DriveType -ne "5"}
 foreach ($disk in $disks) {
-	"* " + $disk.DeviceID + " (S/N: " + $($disk.VolumeSerialNumber) + ")"
-	"** FileSystem  : " + $($disk.FileSystem)
-	"** Disk Size   : " + $([math]::Round($disk.size / 1gb,2)) + "Gb"
-	"** Free space  : " + $([math]::Round($disk.freespace / 1gb,2)) + "Gb"
-	" "
+"* " + $disk.DeviceID + " (S/N: " + $($disk.VolumeSerialNumber) + ")"
+"** FileSystem  : " + $($disk.FileSystem)
+"** Disk Size   : " + $([math]::Round($disk.size / 1gb,2)) + "Gb"
+"** Free space  : " + $([math]::Round($disk.freespace / 1gb,2)) + "Gb"
+" "
 }
 
 "== Network Info == "
@@ -86,6 +86,7 @@ foreach ($adapter in $adapters){
 	$netmask = $adapter | Get-NetIPAddress -AddressFamily IPv4 | select PrefixLength
 	$dns = Get-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -AddressFamily Ipv4 | select ServerAddresses
 	$advanced = Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where{($_.Description -eq $adapter.ifDesc)}
+	
 	
 	if ($env:userdnsdomain -eq $null){
 		#$domain = Get-ComputerInfo -Property CsWorkgroup
@@ -102,7 +103,7 @@ foreach ($adapter in $adapters){
 	"** Domain: " + $domain.CsWorkgroup
 	"** MAC Address: " + $adapter.MacAddress -replace "-",":"
 	"** Profile Type: " + ($adapter | Get-NetConnectionProfile).NetworkCategory
-	"** WOL Enabled: " + ($adapter | Get-NetAdapterAdvancedProperty -RegistryKeyword "*WakeOnMagicPacket").RegistryValue
+	"** WOL Enabled: " + ($adapter | Get-NetAdapterAdvancedProperty -RegistryKeyword "*WakeOnMagicPacket").RegistryValue 2>&1>$null
 	"** DHCP: " + ($adapter | Get-NetIPInterface -AddressFamily IPv4).Dhcp
 	if (($adapter | Get-NetIPInterface -AddressFamily IPv4).Dhcp -eq "Enabled"){
 		"** DHCP Server: " + $advanced.DHCPServer
@@ -118,18 +119,18 @@ if ($netItems){
 "== Mapped Drive =="
 
 foreach($mapItem in $netItems) {
-	"* " +$($mapItem.Name) + "         : " + $($mapItem.ProviderName)
+"* " +$($mapItem.Name) + "         : " + $($mapItem.ProviderName)
 }
 " "
 }
 
 $printItems = Get-WMIObject -class Win32_Printer | where {($_.Name -notlike "*ax*") -and ($_.Name -notlike "*PDF*") -and ($_.Name -notlike "*XPS*") -and ($_.Name -notlike "*Note*")} | Select Name,DriverName,PortName
 if ($printItems){
-	"== Printers =="
+"== Printers =="
 	foreach($instPrinter in $printItems) {
-		"* " + $($instPrinter.PortName)
-		"** " + $($instPrinter.name) + ": " + $($instPrinter.DriverName )
-		" "
+	"* " + $($instPrinter.PortName)
+	"** " + $($instPrinter.name) + ": " + $($instPrinter.DriverName )
+	" "
 	}
 }
 
