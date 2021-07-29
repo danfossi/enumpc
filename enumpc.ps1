@@ -1,280 +1,68 @@
-# description		: Script to enumerate local machine
+# description	: Extract PC info
 # author(s)		: Dennis Anfossi
-# date			: 10.12.2015
-# version		: 0.1.5
+# date			: 29/04/2021
+# version		: 0.2.0
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
-#			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
-#			: cmd.exe /c @powershell -Noexit <path>\<to>\<script>.ps1
+#				: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
+#				: cmd.exe /c @powershell -Noexit <path>\<to>\<script>.ps1
 ###########################################################
 
-Function Get-InstalledApplication
-{ 
-Param( 
-[Parameter(Mandatory=$true)] 
-[string[]]$Computername) 
-
-#Registry Hives 
-
-$Object =@() 
-
-$excludeArray = ("Security Update for Windows", 
-"Update for Windows", 
-"Update for Microsoft .NET", 
-"Update for Microsoft",
-"Security Update for Microsoft", 
-"Hotfix for Windows", 
-"Hotfix for Microsoft .NET Framework",
-"Definition Update",
-"Hotfix for Microsoft Visual Studio 2007 Tools", 
-"Hotfix") 
-
-[long]$HIVE_HKROOT = 2147483648 
-[long]$HIVE_HKCU = 2147483649 
-[long]$HIVE_HKLM = 2147483650 
-[long]$HIVE_HKU = 2147483651 
-[long]$HIVE_HKCC = 2147483653 
-[long]$HIVE_HKDD = 2147483654 
-
-Foreach($EachServer in $Computername){ 
-$Query = Get-WmiObject -ComputerName $Computername -query "Select AddressWidth, DataWidth,Architecture from Win32_Processor"  
-foreach ($i in $Query) 
-{ 
- If($i.AddressWidth -eq 64){             
- $OSArch='64-bit' 
- }             
-Else{             
-$OSArch='32-bit'             
-} 
-} 
-
-Switch ($OSArch) 
-{ 
-
- "64-bit"{ 
-$RegProv = GWMI -Namespace "root\Default" -list -computername $EachServer| where{$_.Name -eq "StdRegProv"} 
-$Hive = $HIVE_HKLM 
-$RegKey_64BitApps_64BitOS = "Software\Microsoft\Windows\CurrentVersion\Uninstall" 
-$RegKey_32BitApps_64BitOS = "Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall" 
-$RegKey_32BitApps_32BitOS = "Software\Microsoft\Windows\CurrentVersion\Uninstall" 
-
-############################################################################# 
-
-# Get SubKey names 
-
-$SubKeys = $RegProv.EnumKey($HIVE, $RegKey_64BitApps_64BitOS) 
-
-# Make Sure No Error when Reading Registry 
-
-if ($SubKeys.ReturnValue -eq 0) 
-{  # Loop Trhough All Returned SubKEys 
-ForEach ($Name in $SubKeys.sNames) 
- { 
-$SubKey = "$RegKey_64BitApps_64BitOS\$Name" 
-$ValueName = "DisplayName" 
-$ValuesReturned = $RegProv.GetStringValue($Hive, $SubKey, $ValueName) 
-$AppName = $ValuesReturned.sValue 
-$Version = ($RegProv.GetStringValue($Hive, $SubKey, "DisplayVersion")).sValue  
-$Publisher = ($RegProv.GetStringValue($Hive, $SubKey, "Publisher")).sValue  
-$donotwrite = $false 
-
-if($AppName.length -gt "0"){ 
-
- Foreach($exclude in $excludeArray)  
-                        { 
-                        if($AppName.StartsWith($exclude) -eq $TRUE) 
-                            { 
-                            $donotwrite = $true 
-                            break 
-                            } 
-                        } 
-            if ($donotwrite -eq $false)  
-                        {                         
-            $Object += New-Object PSObject -Property @{ 
-            Appication = $AppName; 
-            Architecture  = "64-BIT"; 
-            ServerName = $EachServer; 
-            Version = $Version; 
-            Publisher= $Publisher; 
-           } 
-                        } 
-
-} 
-
-  }} 
-
-############################################################################# 
-
-$SubKeys = $RegProv.EnumKey($HIVE, $RegKey_32BitApps_64BitOS) 
-
-# Make Sure No Error when Reading Registry 
-
-if ($SubKeys.ReturnValue -eq 0) 
-
-{ 
-
-  # Loop Through All Returned SubKEys 
-
-  ForEach ($Name in $SubKeys.sNames) 
-
-  { 
-
-    $SubKey = "$RegKey_32BitApps_64BitOS\$Name" 
-
-$ValueName = "DisplayName" 
-$ValuesReturned = $RegProv.GetStringValue($Hive, $SubKey, $ValueName) 
-$AppName = $ValuesReturned.sValue 
-$Version = ($RegProv.GetStringValue($Hive, $SubKey, "DisplayVersion")).sValue  
-$Publisher = ($RegProv.GetStringValue($Hive, $SubKey, "Publisher")).sValue  
- $donotwrite = $false 
-
-if($AppName.length -gt "0"){ 
- Foreach($exclude in $excludeArray)  
-                        { 
-                        if($AppName.StartsWith($exclude) -eq $TRUE) 
-                            { 
-                            $donotwrite = $true 
-                            break 
-                            } 
-                        } 
-            if ($donotwrite -eq $false)  
-                        {                         
-            $Object += New-Object PSObject -Property @{ 
-            Appication = $AppName; 
-            Architecture  = "32-BIT"; 
-            ServerName = $EachServer; 
-            Version = $Version; 
-            Publisher= $Publisher; 
-           } 
-                        } 
-           } 
-
-    } 
-
-} 
-
-} #End of 64 Bit 
-
-###################################################################################### 
-
-########################################################################################### 
-
-"32-bit"{ 
-
-$RegProv = GWMI -Namespace "root\Default" -list -computername $EachServer| where{$_.Name -eq "StdRegProv"} 
-
-$Hive = $HIVE_HKLM 
-
-$RegKey_32BitApps_32BitOS = "Software\Microsoft\Windows\CurrentVersion\Uninstall" 
-
-############################################################################# 
-
-# Get SubKey names 
-
-$SubKeys = $RegProv.EnumKey($HIVE, $RegKey_32BitApps_32BitOS) 
-
-# Make Sure No Error when Reading Registry 
-
-if ($SubKeys.ReturnValue -eq 0) 
-
-{  # Loop Through All Returned SubKEys 
-
-  ForEach ($Name in $SubKeys.sNames) 
-
-  { 
-$SubKey = "$RegKey_32BitApps_32BitOS\$Name" 
-$ValueName = "DisplayName" 
-$ValuesReturned = $RegProv.GetStringValue($Hive, $SubKey, $ValueName) 
-$AppName = $ValuesReturned.sValue 
-$Version = ($RegProv.GetStringValue($Hive, $SubKey, "DisplayVersion")).sValue  
-$Publisher = ($RegProv.GetStringValue($Hive, $SubKey, "Publisher")).sValue  
-
-if($AppName.length -gt "0"){ 
-
-$Object += New-Object PSObject -Property @{ 
-            Appication = $AppName; 
-            Architecture  = "32-BIT"; 
-            ServerName = $EachServer; 
-            Version = $Version; 
-            Publisher= $Publisher; 
-           } 
-           } 
-
-  }} 
-
-}#End of 32 bit 
-
-} # End of Switch 
-
-} 
-
-#$AppsReport 
-
-$column1 = @{expression="ServerName"; width=15; label="Name"; alignment="left"} 
-$column2 = @{expression="Architecture"; width=10; label="32/64 Bit"; alignment="left"} 
-$column3 = @{expression="Appication"; width=80; label="Appication"; alignment="left"} 
-$column4 = @{expression="Version"; width=15; label="Version"; alignment="left"} 
-$column5 = @{expression="Publisher"; width=30; label="Publisher"; alignment="left"} 
-
-#"#"*80 
-#"Installed Software Application Report" 
-#"Numner of Installed Application count : $($object.count)" 
-#"Generated $(get-date)" 
-#"Generated from $(gc env:computername)" 
-#"#"*80 
-
-#$object |Format-Table $column1, $column2, $column3 ,$column4, $column5 
-
-$object |Format-Table $column3
-
-}
-
-Clear-Host
-Write-Host -ForegroundColor Green -NoNewline "Running script, please wait.."
+#Clear-Host
+#Write-Host -ForegroundColor Green -NoNewline "Running script, please wait.."
+$ci = Get-ComputerInfo
 $hostname = Invoke-Command -ScriptBlock {hostname}
-$enum_os=([Environment]::OSVersion)
-$os = ([string]$enum_os.Version.Major) + "." + $([string]$enum_os.Version.Minor)
+$os = ($ci).WindowsCurrentVersion
 
-if ($os -ge 6.1)
-	{
+if ($os -ge 6.1){
 	#"Win >= Win7 "
 	$win_is_compatible = "True"
 	}
-else
-	{
+else{
 	#"Win < Win7"
 	$win_is_compatible = "False"
 	}
 " "
+"******************************** [" + $hostname + "] ********************************"
 " "
-"= " + $hostname + " ="
+
 "== System Info == "
+"=== Hardware === "
+"* Brand   : " + ($ci).CsManufacturer
+"* Modello : " + ($ci).CsModel
+"* S/N     : " + ($ci).BiosSeralNumber
+" "
+
 "=== OS === "
-"* OS Version   : " + (Get-WmiObject -class Win32_OperatingSystem).Caption
+"* OS Version   : " + (Get-WmiObject -class Win32_OperatingSystem).Caption + " (Build: " + ($ci).WindowsVersion + ")"
 "* Installed on : " + ([WMI]'').ConvertToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate) 
 if ($win_is_compatible -match "True"){
-"* Architecture : " + (Get-WmiObject Win32_OperatingSystem).OSArchitecture
+	"* Architecture : " + (Get-WmiObject Win32_OperatingSystem).OSArchitecture
 }
 $lastboot = Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastBootUpTime';EXPRESSION={$_.ConverttoDateTime($_.lastbootuptime)}}
 "* Last boot    : " + $lastboot.lastbootuptime
 if ($win_is_compatible -match "True"){
-"* PowerShell   : " + (Get-ExecutionPolicy)
+	"* PowerShell   : " + (Get-ExecutionPolicy)
 }
 " "
 
 if ($win_is_compatible -match "True"){
-"=== Restore Point(s) ==="
- get-computerrestorepoint | format-table @{Label="Date"; Expression={$_.ConvertToDateTime($_.CreationTime)}}, Description
+	$restore_points = get-computerrestorepoint
+	if ($restore_points){
+		"=== Restore Point(s) ==="
+		foreach ($point in $restore_points) {
+			$dateTime = [System.Management.ManagementDateTimeConverter]::ToDateTime($point.CreationTime)
+			"* " + $dateTime + " - " + $point.Description
+		} 
+		" "
+	}	
 }
 
 "=== CPU(s) === "
-$cpus = Get-WmiObject -class win32_processor
-
-foreach ($cpu in $cpus) {
-"* CPU Type     : " + $($cpu.caption)
+$cpu = Get-WmiObject -class win32_processor
+"* CPU Type     : " + ($ci).CsProcessors.name 
 "* CPU Speed    : " + $($cpu.CurrentClockSpeed) + " MHz"
 " "
-}
 
 "=== RAM === "
 $ram = Get-WmiObject -Class Win32_ComputerSystem
@@ -282,67 +70,47 @@ $ram = Get-WmiObject -Class Win32_ComputerSystem
 " "
 
 "=== Disk(s) ==="
-$disks = Get-WmiObject Win32_LogicalDisk
+$disks = Get-WmiObject Win32_LogicalDisk | where {$_.DriveType -ne "5"}
 foreach ($disk in $disks) {
-"* " + $disk.DeviceID + " (S/N: " + $($disk.VolumeSerialNumber) + ")"
-"** FileSystem  : " + $($disk.FileSystem)
-"** Disk Size   : " + $([math]::Round($disk.size / 1gb,2)) + "Gb"
-"** Free space  : " + $([math]::Round($disk.freespace / 1gb,2)) + "Gb"
-" "
+	"* " + $disk.DeviceID + " (S/N: " + $($disk.VolumeSerialNumber) + ")"
+	"** FileSystem  : " + $($disk.FileSystem)
+	"** Disk Size   : " + $([math]::Round($disk.size / 1gb,2)) + "Gb"
+	"** Free space  : " + $([math]::Round($disk.freespace / 1gb,2)) + "Gb"
+	" "
 }
 
 "== Network Info == "
-$strComputer ="."
-$colItems = Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where{$_.IPEnabled -eq "True"}
-foreach($objItem in $colItems) {
-"* Interface: " + $($objItem.Description)
-"** IP Address  : " + $($objItem.IPAddress[0])
-"** Netmask     : " + $($objItem.IPSubnet)
-"** Gateway     : " + $($objItem.DefaultIPGateway)
-"** DNS Server  : " + $($objItem.DNSServerSearchOrder)
-"** Domain      : " + $($objItem.DNSDomain)
-" "
-"** Mac Address : " + $($objItem.MACAddress)
-" "
-"** DHCP Enabled: " + $($objItem.DHCPEnabled)
-"** DHCP Server : " + $($objItem.DHCPServer)
-
-" "		  
-}
-
-" "	
-"=== Current Account ==="
-$net = New-Object -comobject Wscript.Network
-$CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-$WindowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($CurrentUser)
-$homeItems = (Get-ChildItem $($home) -recurse | Measure-Object -property length -sum)
-
-if (Test-Path HKCU:\Software\Microsoft\Windows\CurrentVersion\UnreadMail\)
-{
-   $mailaccounts = Get-ChildItem HKCU:\Software\Microsoft\Windows\CurrentVersion\UnreadMail\
-}
-
-"* Username   : " + $($net.username)
-"* Prof. Size : " + "{0:N2}" -f ($homeItems.sum / 1GB) + " Gb"
-if ($WindowsPrincipal.IsInRole("Administrators"))
-{
-"* Group      : Administrators"
-}
-else
-{
-"* Group      : Users"
-}
-	if ($win_is_compatible -match "True"){
-"* UAC        : " + (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA
-}
-" "
-
-if ($mailaccounts) {
-"==== Mail Address ===="
-foreach ($mailaccount in $mailaccounts) {
-"* Mail used : " + $mailaccount -replace "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\",""
-}
-""
+$adapters = Get-NetAdapter -physical | where status -eq "Up"
+foreach ($adapter in $adapters){
+	$ip = $adapter |  Get-NetIPAddress -AddressFamily IPv4 | select IPAddress
+	$netmask = $adapter | Get-NetIPAddress -AddressFamily IPv4 | select PrefixLength
+	$dns = Get-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -AddressFamily Ipv4 | select ServerAddresses
+	$advanced = Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where{($_.Description -eq $adapter.ifDesc)}
+	
+	if ($env:userdnsdomain -eq $null){
+		#$domain = Get-ComputerInfo -Property CsWorkgroup
+		$domain = ($ci).CsWorkgroup
+	}
+	else{
+		$domain = $env:userdnsdomain
+	}
+	"* Interface: " + $adapter.InterfaceDescription
+	"** IP Address: " + $ip.IPAddress
+	"** Netmask: " + $netmask.PrefixLength
+	"** Gateway: " + ($adapter |Get-NetIPConfiguration).IPv4DefaultGateway.NextHop
+	"** DNS: " + $dns.ServerAddresses
+	"** Domain: " + $domain.CsWorkgroup
+	"** MAC Address: " + $adapter.MacAddress -replace "-",":"
+	"** Profile Type: " + ($adapter | Get-NetConnectionProfile).NetworkCategory
+	"** WOL Enabled: " + ($adapter | Get-NetAdapterAdvancedProperty -RegistryKeyword "*WakeOnMagicPacket").RegistryValue
+	"** DHCP: " + ($adapter | Get-NetIPInterface -AddressFamily IPv4).Dhcp
+	if (($adapter | Get-NetIPInterface -AddressFamily IPv4).Dhcp -eq "Enabled"){
+		"** DHCP Server: " + $advanced.DHCPServer
+		" "
+	}
+	else{
+		" "
+	}
 }
 
 $netItems = Get-WmiObject -Class Win32_MappedLogicalDisk | select Name, ProviderName
@@ -350,24 +118,27 @@ if ($netItems){
 "== Mapped Drive =="
 
 foreach($mapItem in $netItems) {
-"* " +$($mapItem.Name) + "         : " + $($mapItem.ProviderName)
+	"* " +$($mapItem.Name) + "         : " + $($mapItem.ProviderName)
 }
 " "
 }
 
-"== Printers =="
-$printItems = Get-WMIObject -class Win32_Printer | Select Name,DriverName,PortName
-foreach($instPrinter in $printItems) {
-"* " + $($instPrinter.Name)
-"** " + $($instPrinter.PortName) + ": " + $($instPrinter.DriverName )
-" "
+$printItems = Get-WMIObject -class Win32_Printer | where {($_.Name -notlike "*ax*") -and ($_.Name -notlike "*PDF*") -and ($_.Name -notlike "*XPS*") -and ($_.Name -notlike "*Note*")} | Select Name,DriverName,PortName
+if ($printItems){
+	"== Printers =="
+	foreach($instPrinter in $printItems) {
+		"* " + $($instPrinter.PortName)
+		"** " + $($instPrinter.name) + ": " + $($instPrinter.DriverName )
+		" "
+	}
 }
 
 "== Installed Software =="
-Get-InstalledApplication -Computername localhost
+foreach($package in Get-Package | Where-Object {$_.name -notlike "*KB*"} | select Name, Version -Unique | Sort Name){
+	"* " + $package.Name + " (Version: " + $package.version + ")"
+}
+
 
 " "
-"****************************************************************************"
+"******************************** [/" + $hostname + "] ********************************"
 " "
-
-Write-Host -ForegroundColor Green "done!"
