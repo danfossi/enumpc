@@ -89,7 +89,6 @@ foreach ($adapter in $adapters){
 	
 	
 	if ($env:userdnsdomain -eq $null){
-		#$domain = Get-ComputerInfo -Property CsWorkgroup
 		$domain = ($ci).CsWorkgroup
 	}
 	else{
