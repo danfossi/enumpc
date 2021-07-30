@@ -127,7 +127,7 @@ if ($printItems){
 	"== Printers =="
 	foreach($instPrinter in $printItems) {
 		"* " + $($instPrinter.PortName)
-		"** " + $($instPrinter.name) + ": " + $($instPrinter.DriverName )
+		"** " + $($instPrinter.name) + ": " + $($instPrinter.DriverName)
 		" "
 	}
 }
@@ -136,7 +136,18 @@ if ($printItems){
 foreach($package in Get-Package | Where-Object {$_.name -notlike "*KB*"} | select Name, Version -Unique | Sort Name){
 	"* " + $package.Name + " (Version: " + $package.version + ")"
 }
+" "
 
+$autoruns = Get-CimInstance -ClassName Win32_StartupCommand | Select Caption, Location, Command
+if ($autoruns){
+	"== AutoRuns =="
+	foreach($autorun in $autoruns){
+		"* " + $autorun.caption
+		"** Location: " + $autorun.location
+		"** Command: " + $autorun.command
+		" "
+	}
+}
 
 " "
 "******************************** [/" + $hostname + "] ********************************"
