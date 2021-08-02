@@ -73,14 +73,19 @@ $cpu = Get-WmiObject -class win32_processor
 " "
 
 "=== RAM === "
+$totalram = Get-WmiObject -Class Win32_ComputerSystem
 $rams = Get-WmiObject Win32_PhysicalMemory
-foreach ($ram in $rams){
-	"* " + $ram.DeviceLocator
-	"** P/N: " + $ram.PartNumber
-	"** S/N: " + $ram.SerialNumber
-	"** Capacity: " + ([math]::Round($ram.Capacity / 1gb,2))  + "Gb"
-	"** Speed: " + $ram.Speed + "MHz"
-	" "
+"* Total Memory : " + ([math]::Round($totalram.TotalPhysicalMemory / 1gb)) + "Gb"
+" "
+if($rams){
+	foreach ($ram in $rams){
+		"==== " + $ram.DeviceLocator + " ===="
+		"* P/N: " + $ram.PartNumber
+		"* S/N: " + $ram.SerialNumber
+		"* Capacity: " + ([math]::Round($ram.Capacity / 1gb,2))  + "Gb"
+		"* Speed: " + $ram.Speed + "MHz"
+		" "
+	}
 }
 
 "=== Disk(s) ==="
