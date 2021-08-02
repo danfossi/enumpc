@@ -97,17 +97,17 @@ Get-WmiObject Win32_DiskDrive | sort DeviceID | ForEach-Object {
 		$drives = "ASSOCIATORS OF " + "{Win32_DiskPartition.DeviceID='$($partition.DeviceID)'} " + "WHERE AssocClass = Win32_LogicalDiskToPartition"
 		Get-WmiObject -Query $drives | ForEach-Object {
 			"==== " + $_.VolumeName + " ===="
-		        "* Disk Number   : " + ($disk.DeviceID -replace '^[^PHYSICALDRIVE]*PHYSICALDRIVE', 'Disk ')
+			"* Disk Number   : " + ($disk.DeviceID -replace '^[^PHYSICALDRIVE]*PHYSICALDRIVE', 'Disk ')
 			"* Disk Model    : " + $disk.Model
 			"* Disk Status   : " + $(Get-Disk -Number ($disk.DeviceID -replace '^[^PHYSICALDRIVE]*PHYSICALDRIVE', '')).HealthStatus
-		        "* Disk Size     : " + $([math]::Round($disk.Size / 1gb,2)) + "Gb"
-		        "* Partition     : " + $($partition.Name -replace '^[^,]*,', '' -replace " ","")
+			"* Disk Size     : " + $([math]::Round($disk.Size / 1gb,2)) + "Gb"
+			"* Partition     : " + $($partition.Name -replace '^[^,]*,', '' -replace " ","")
 			"* Type          : " + $partition.type
 			"* FileSystem    : " + $_.filesystem
-		        "* Drive Letter  : " + $_.DeviceID
-		        "* Volume Name   : " + $_.VolumeName
-		        "* Prtition Size : " + $([math]::Round($_.Size / 1gb,2)) + "Gb"
-		        "* Free Space    : " + $([math]::Round($_.FreeSpace / 1gb,2)) + "Gb"
+			"* Drive Letter  : " + $_.DeviceID
+			"* Volume Name   : " + $_.VolumeName
+			"* Prtition Size : " + $([math]::Round($_.Size / 1gb,2)) + "Gb"
+			"* Free Space    : " + $([math]::Round($_.FreeSpace / 1gb,2)) + "Gb"
 			" "
 			#$disk | format-list *
 			#$partition | format-list * 
