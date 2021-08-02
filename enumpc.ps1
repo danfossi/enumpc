@@ -1,7 +1,7 @@
 # description		: Extract PC info
 # author(s)		: Dennis Anfossi
 # date			: 29/04/2021
-# version		: 0.2.0
+# version		: 0.2.1
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
 #			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
@@ -29,20 +29,28 @@ else{
 "== System Info == "
 "=== Hardware === "
 "* Brand   : " + ($ci).CsManufacturer
-"* Modello : " + ($ci).CsModel
+"* Model   : " + ($ci).CsModel
 "* S/N     : " + ($ci).BiosSeralNumber
 " "
 
 "=== OS === "
-"* OS Version   : " + (Get-WmiObject -class Win32_OperatingSystem).Caption + " (Build: " + ($ci).WindowsVersion + ")"
-"* Installed on : " + ([WMI]'').ConvertToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate) 
+"* OS Version   : " + ($ci).OsName + " (Build: " + ($ci).WindowsVersion + ")"
+"* OS Language  : " + ($ci).OsLanguage
+"* Installed on : " + ($ci).OsInstallDate
+"* Architecture : " + ($ci).OsArchitecture
+"* Last boot    : " + ($ci).OsLastBootUpTime
+" "
+
 if ($win_is_compatible -match "True"){
-	"* Architecture : " + (Get-WmiObject Win32_OperatingSystem).OSArchitecture
-}
-$lastboot = Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastBootUpTime';EXPRESSION={$_.ConverttoDateTime($_.lastbootuptime)}}
-"* Last boot    : " + $lastboot.lastbootuptime
-if ($win_is_compatible -match "True"){
-	"* PowerShell   : " + (Get-ExecutionPolicy)
+	"=== PowerShell ==="
+	"* Execution    : " + (Get-ExecutionPolicy)
+	Invoke-Command -ComputerName $hostname { 1 } 2>&1>$null
+	if ($? -eq "True"){
+		"* PSRemoting   : Enabled"
+	}
+	else{
+		"* PSRemoting   : Disabled"
+	}
 }
 " "
 
@@ -65,9 +73,15 @@ $cpu = Get-WmiObject -class win32_processor
 " "
 
 "=== RAM === "
-$ram = Get-WmiObject -Class Win32_ComputerSystem
-"* RAM          : " + ([math]::Round($ram.TotalPhysicalMemory / 1gb,2)) + "Gb"
-" "
+$rams = Get-WmiObject Win32_PhysicalMemory
+foreach ($ram in $rams){
+	"* " + $ram.DeviceLocator
+	"** P/N: " + $ram.PartNumber
+	"** S/N: " + $ram.SerialNumber
+	"** Capacity: " + ([math]::Round($ram.Capacity / 1gb,2))  + "Gb"
+	"** Speed: " + $ram.Speed + "MHz"
+	" "
+}
 
 "=== Disk(s) ==="
 $disks = Get-WmiObject Win32_LogicalDisk | where {$_.DriveType -ne "5"}
@@ -86,20 +100,17 @@ foreach ($adapter in $adapters){
 	$netmask = $adapter | Get-NetIPAddress -AddressFamily IPv4 | select PrefixLength
 	$dns = Get-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -AddressFamily Ipv4 | select ServerAddresses
 	$advanced = Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where{($_.Description -eq $adapter.ifDesc)}
-	
-	
-	if ($env:userdnsdomain -eq $null){
-		$domain = ($ci).CsWorkgroup
-	}
-	else{
-		$domain = $env:userdnsdomain
-	}
 	"* Interface: " + $adapter.InterfaceDescription
 	"** IP Address: " + $ip.IPAddress
 	"** Netmask: " + $netmask.PrefixLength
 	"** Gateway: " + ($adapter |Get-NetIPConfiguration).IPv4DefaultGateway.NextHop
 	"** DNS: " + $dns.ServerAddresses
-	"** Domain: " + $domain
+		if ($env:userdnsdomain -eq $null){
+			"** Workgroup: " + ($ci).CsWorkgroup
+		}
+		else{
+			"** Domain: " + $env:userdnsdomain
+		}
 	"** MAC Address: " + $adapter.MacAddress -replace "-",":"
 	"** Profile Type: " + ($adapter | Get-NetConnectionProfile).NetworkCategory
 	"** WOL Enabled: " + ($adapter | Get-NetAdapterAdvancedProperty -RegistryKeyword "*WakeOnMagicPacket").RegistryValue 2>$null
@@ -122,12 +133,14 @@ if ($netItems){
 		" "
 	}
 
-$printItems = Get-WMIObject -class Win32_Printer | where {($_.Name -notlike "*ax*") -and ($_.Name -notlike "*PDF*") -and ($_.Name -notlike "*XPS*") -and ($_.Name -notlike "*Note*")} | Select Name,DriverName,PortName
-if ($printItems){
+$printers = Get-Printer | where {($_.Name -notlike "*ax*") -and ($_.Name -notlike "*PDF*") -and ($_.Name -notlike "*XPS*") -and ($_.Name -notlike "*Note*")}
+if ($printers){
 	"== Printers =="
-	foreach($instPrinter in $printItems) {
-		"* " + $($instPrinter.PortName)
-		"** " + $($instPrinter.name) + ": " + $($instPrinter.DriverName)
+	foreach($printer in $printers){
+		"* Printer: " + $printer.Name
+		"** IP Address: " + $printer.PortName -replace "IP_",""
+		"** Driver: " + $printer.DriverName
+		"** Shared: " + $printer.Shared
 		" "
 	}
 }
