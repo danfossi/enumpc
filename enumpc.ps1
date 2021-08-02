@@ -1,7 +1,7 @@
 # description		: Extract PC info
 # author(s)		: Dennis Anfossi
 # date			: 29/04/2021
-# version		: 0.2.1
+# version		: 0.2.2
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
 #			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
@@ -89,13 +89,32 @@ if($rams){
 }
 
 "=== Disk(s) ==="
-$disks = Get-WmiObject Win32_LogicalDisk | where {$_.DriveType -ne "5"}
-foreach ($disk in $disks) {
-	"* " + $disk.DeviceID + " (S/N: " + $($disk.VolumeSerialNumber) + ")"
-	"** FileSystem  : " + $($disk.FileSystem)
-	"** Disk Size   : " + $([math]::Round($disk.size / 1gb,2)) + "Gb"
-	"** Free space  : " + $([math]::Round($disk.freespace / 1gb,2)) + "Gb"
-	" "
+Get-WmiObject Win32_DiskDrive | sort DeviceID | ForEach-Object {
+  $disk = $_
+  $partitions = "ASSOCIATORS OF " + "{Win32_DiskDrive.DeviceID='$($disk.DeviceID)'} " + "WHERE AssocClass = Win32_DiskDriveToDiskPartition"
+  Get-WmiObject -Query $partitions | ForEach-Object {
+    $partition = $_
+    $drives = "ASSOCIATORS OF " + "{Win32_DiskPartition.DeviceID='$($partition.DeviceID)'} " + "WHERE AssocClass = Win32_LogicalDiskToPartition"
+    Get-WmiObject -Query $drives | ForEach-Object {
+      
+		"==== " + $_.VolumeName + " ===="
+        "* Disk Number   : " + ($disk.DeviceID -replace '^[^PHYSICALDRIVE]*PHYSICALDRIVE', 'Disk ')
+		"* Disk Model    : " + $disk.Model
+		"* Disk Status   : " + $(Get-Disk -Number ($disk.DeviceID -replace '^[^PHYSICALDRIVE]*PHYSICALDRIVE', '')).HealthStatus
+        "* Disk Size     : " + $([math]::Round($disk.Size / 1gb,2)) + "Gb"
+        "* Partition     : " + $($partition.Name -replace '^[^,]*,', '' -replace " ","")
+		"* Type          : " + $partition.type
+		"* FileSystem    : " + $_.filesystem
+        "* Drive Letter  : " + $_.DeviceID
+        "* Volume Name   : " + $_.VolumeName
+        "* Prtition Size : " + $([math]::Round($_.Size / 1gb,2)) + "Gb"
+        "* Free Space    : " + $([math]::Round($_.FreeSpace / 1gb,2)) + "Gb"
+		" "
+		#$disk | format-list *
+		#$partition | format-list * 
+		#$_ | format-list *
+    }
+  }
 }
 
 "== Network Info == "
@@ -134,9 +153,9 @@ if ($netItems){
 	"== Mapped Drive =="
 	foreach($mapItem in $netItems) {
 		"* " +$($mapItem.Name) + "         : " + $($mapItem.ProviderName)
-		}
-		" "
 	}
+	" "
+}
 
 $printers = Get-Printer | where {($_.Name -notlike "*ax*") -and ($_.Name -notlike "*PDF*") -and ($_.Name -notlike "*XPS*") -and ($_.Name -notlike "*Note*")}
 if ($printers){
