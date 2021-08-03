@@ -1,7 +1,7 @@
 # description		: Extract PC info
 # author(s)		: Dennis Anfossi
 # date			: 29/04/2021
-# version		: 0.2.2
+# version		: 0.2.3
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
 #			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
@@ -27,29 +27,30 @@ else{
 " "
 
 "== System Info == "
-"=== Hardware === "
-"* Brand   : " + ($ci).CsManufacturer
-"* Model   : " + ($ci).CsModel
-"* S/N     : " + ($ci).BiosSeralNumber
+"* Brand         : " + ($ci).CsManufacturer
+"* Model         : " + ($ci).CsModel
+"* S/N           : " + ($ci).BiosSeralNumber
 " "
 
-"=== OS === "
-"* OS Version   : " + ($ci).OsName + " (Build: " + ($ci).WindowsVersion + ")"
-"* OS Language  : " + ($ci).OsLanguage
-"* Installed on : " + ($ci).OsInstallDate
-"* Architecture : " + ($ci).OsArchitecture
-"* Last boot    : " + ($ci).OsLastBootUpTime
+"== OS == "
+"* OS Version    : " + ($ci).OsName + " (Build: " + ($ci).WindowsVersion + ")"
+"* OS Language   : " + ($ci).OsLanguage
+"* Installed on  : " + ($ci).OsInstallDate
+"* Architecture  : " + ($ci).OsArchitecture
+"* Last boot     : " + ($ci).OsLastBootUpTime
+"* Hostname      : " + ($ci).csName
+"* Description   : " + (Get-WmiObject -Class Win32_OperatingSystem).Description
 " "
 
 if ($win_is_compatible -match "True"){
-	"=== PowerShell ==="
-	"* Execution    : " + (Get-ExecutionPolicy)
+	"== PowerShell =="
+	"* Execution     : " + (Get-ExecutionPolicy)
 	Invoke-Command -ComputerName $hostname { 1 } 2>&1>$null
 	if ($? -eq "True"){
-		"* PSRemoting   : Enabled"
+		"* PSRemoting    : Enabled"
 	}
 	else{
-		"* PSRemoting   : Disabled"
+		"* PSRemoting    : Disabled"
 	}
 }
 " "
@@ -57,7 +58,7 @@ if ($win_is_compatible -match "True"){
 if ($win_is_compatible -match "True"){
 	$restore_points = get-computerrestorepoint 2>$null
 	if ($restore_points){
-		"=== Restore Point(s) ==="
+		"== Restore Point(s) =="
 		foreach ($point in $restore_points) {
 			$dateTime = [System.Management.ManagementDateTimeConverter]::ToDateTime($point.CreationTime)
 			"* " + $dateTime + " - " + $point.Description
@@ -66,29 +67,31 @@ if ($win_is_compatible -match "True"){
 	}	
 }
 
-"=== CPU(s) === "
+"== CPU(s) == "
 $cpu = Get-WmiObject -class win32_processor
-"* CPU Type     : " + ($ci).CsProcessors.name 
-"* CPU Speed    : " + $($cpu.CurrentClockSpeed) + " MHz"
+"* CPU Type      : " + ($ci).CsProcessors.name 
+"* CPU Speed     : " + $($cpu.CurrentClockSpeed) + " MHz"
+"* Cores         : " + ($cpu.NumberOfCores)
+"* Architecture  : " + ($cpu.AddressWidth) + " bit"
 " "
 
-"=== RAM === "
+"== RAM == "
 $totalram = Get-WmiObject -Class Win32_ComputerSystem
 $rams = Get-WmiObject Win32_PhysicalMemory
-"* Total Memory : " + ([math]::Round($totalram.TotalPhysicalMemory / 1gb)) + "Gb"
+"* Total Memory  : " + ([math]::Round($totalram.TotalPhysicalMemory / 1gb)) + "Gb"
 " "
 if($rams){
 	foreach ($ram in $rams){
-		"==== " + $ram.DeviceLocator + " ===="
-		"* P/N: " + $ram.PartNumber
-		"* S/N: " + $ram.SerialNumber
-		"* Capacity: " + ([math]::Round($ram.Capacity / 1gb,2))  + "Gb"
-		"* Speed: " + $ram.Speed + "MHz"
+		"=== " + $ram.DeviceLocator + " ==="
+		"* P/N           : " + $ram.PartNumber
+		"* S/N           : " + $ram.SerialNumber
+		"* Capacity      : " + ([math]::Round($ram.Capacity / 1gb,2))  + "Gb"
+		"* Speed         : " + $ram.Speed + "MHz"
 		" "
 	}
 }
 
-"=== Disk(s) ==="
+"== Disk(s) =="
 Get-WmiObject Win32_DiskDrive | sort DeviceID | ForEach-Object {
 	$disk = $_
 	$partitions = "ASSOCIATORS OF " + "{Win32_DiskDrive.DeviceID='$($disk.DeviceID)'} " + "WHERE AssocClass = Win32_DiskDriveToDiskPartition"
@@ -96,7 +99,7 @@ Get-WmiObject Win32_DiskDrive | sort DeviceID | ForEach-Object {
 		$partition = $_
 		$drives = "ASSOCIATORS OF " + "{Win32_DiskPartition.DeviceID='$($partition.DeviceID)'} " + "WHERE AssocClass = Win32_LogicalDiskToPartition"
 		Get-WmiObject -Query $drives | ForEach-Object {
-			"==== " + $_.VolumeName + " ===="
+			"=== " + $_.VolumeName + " ==="
 			"* Disk Number   : " + ($disk.DeviceID -replace '^[^PHYSICALDRIVE]*PHYSICALDRIVE', 'Disk ')
 			"* Disk Model    : " + $disk.Model
 			"* Disk Status   : " + $(Get-Disk -Number ($disk.DeviceID -replace '^[^PHYSICALDRIVE]*PHYSICALDRIVE', '')).HealthStatus
@@ -112,7 +115,7 @@ Get-WmiObject Win32_DiskDrive | sort DeviceID | ForEach-Object {
 			#$disk | format-list *
 			#$partition | format-list * 
 			#$_ | format-list *
-	    	}
+	    }
   	}
 }
 
@@ -123,23 +126,23 @@ foreach ($adapter in $adapters){
 	$netmask = $adapter | Get-NetIPAddress -AddressFamily IPv4 | select PrefixLength
 	$dns = Get-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -AddressFamily Ipv4 | select ServerAddresses
 	$advanced = Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where{($_.Description -eq $adapter.ifDesc)}
-	"* Interface: " + $adapter.InterfaceDescription
-	"** IP Address: " + $ip.IPAddress
-	"** Netmask: " + $netmask.PrefixLength
-	"** Gateway: " + ($adapter |Get-NetIPConfiguration).IPv4DefaultGateway.NextHop
-	"** DNS: " + $dns.ServerAddresses
+	"* Interface     : " + $adapter.InterfaceDescription
+	"** IP Address   : " + $ip.IPAddress
+	"** Netmask      : " + $netmask.PrefixLength
+	"** Gateway      : " + ($adapter |Get-NetIPConfiguration).IPv4DefaultGateway.NextHop
+	"** DNS          : " + $dns.ServerAddresses
 		if ($env:userdnsdomain -eq $null){
-			"** Workgroup: " + ($ci).CsWorkgroup
+			"** Workgroup    : " + ($ci).CsWorkgroup
 		}
 		else{
-			"** Domain: " + $env:userdnsdomain
+			"** Domain       : " + $env:userdnsdomain
 		}
-	"** MAC Address: " + $adapter.MacAddress -replace "-",":"
-	"** Profile Type: " + ($adapter | Get-NetConnectionProfile).NetworkCategory
-	"** WOL Enabled: " + ($adapter | Get-NetAdapterAdvancedProperty -RegistryKeyword "*WakeOnMagicPacket").RegistryValue 2>$null
-	"** DHCP: " + ($adapter | Get-NetIPInterface -AddressFamily IPv4).Dhcp
+	"** MAC Address  : " + $adapter.MacAddress -replace "-",":"
+	"** Profile Type : " + ($adapter | Get-NetConnectionProfile).NetworkCategory
+	"** WOL Enabled  : " + ($adapter | Get-NetAdapterAdvancedProperty -RegistryKeyword "*WakeOnMagicPacket").RegistryValue 2>$null
+	"** DHCP         : " + ($adapter | Get-NetIPInterface -AddressFamily IPv4).Dhcp
 	if (($adapter | Get-NetIPInterface -AddressFamily IPv4).Dhcp -eq "Enabled"){
-		"** DHCP Server: " + $advanced.DHCPServer
+		"** DHCP Server  : " + $advanced.DHCPServer
 		" "
 	}
 	else{
@@ -151,39 +154,100 @@ $netItems = Get-WmiObject -Class Win32_MappedLogicalDisk | select Name, Provider
 if ($netItems){
 	"== Mapped Drive =="
 	foreach($mapItem in $netItems) {
-		"* " +$($mapItem.Name) + "         : " + $($mapItem.ProviderName)
+		"* " +$($mapItem.Name) + "          : " + $($mapItem.ProviderName)
 	}
 	" "
+}
+
+$shares = Get-SmbShare | where {$_.Name -notmatch "IPC\$" -and $_.Name -notmatch "ADMIN\$" -and $_.Name -notmatch "[A-Z]\$"}
+if($shares){
+	"== Shared Folder(s) =="
+	foreach ($share in $shares){
+		$permissions = Get-SmbShareAccess -Name $share.name
+		"* " + $share.name
+		if ($share.description -ne ""){
+		"** Description  : " + $share.description
+		}
+		foreach ($permission in $permissions){
+			"** User         : " + $permission.AccountName
+			"** Access       : " + $permission.AccessRight
+			" "
+		}
+	}
+}
+
+if (Test-Path -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\"){
+	if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU\" -Name UseWuServer).UseWuServer -eq 1){
+		"== Windows Update Settings =="
+		"* WSUS Enabled  : Yes"
+		"* Server        : " + (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\" -Name WuServer).WuServer
+		"* Satus Server  : " + (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\" -Name WuStatusServer).WuStatusServer
+		if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\" -Name TargetGroupEnabled).TargetGroupEnabled -eq 1){
+			"* Use Target    : Yes"
+			"* Target Name   : " + (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\" -Name TargetGroup).TargetGroup
+		}
+		" "
+	}
 }
 
 $printers = Get-Printer | where {($_.Name -notlike "*ax*") -and ($_.Name -notlike "*PDF*") -and ($_.Name -notlike "*XPS*") -and ($_.Name -notlike "*Note*")}
 if ($printers){
 	"== Printers =="
 	foreach($printer in $printers){
-		"* Printer: " + $printer.Name
-		"** IP Address: " + $printer.PortName -replace "IP_",""
-		"** Driver: " + $printer.DriverName
-		"** Shared: " + $printer.Shared
+		"* Printer       : " + $printer.Name
+		"** IP Address   : " + $printer.PortName -replace "IP_",""
+		"** Driver       : " + $printer.DriverName
+		"** Shared       : " + $printer.Shared
 		" "
 	}
 }
 
 "== Installed Software =="
 foreach($package in Get-Package | Where-Object {$_.name -notlike "*KB*"} | select Name, Version -Unique | Sort Name){
-	"* " + $package.Name + " (Version: " + $package.version + ")"
+	if ($package.version -eq $null){
+		"* " + $package.Name
+	}
+	else{
+		"* " + $package.Name + " (Version: " + $package.version + ")"
+	}
 }
 " "
 
 $autoruns = Get-CimInstance -ClassName Win32_StartupCommand | Select Caption, Location, Command
 if ($autoruns){
 	"== AutoRuns =="
+	"=== Applications ==="
 	foreach($autorun in $autoruns){
 		"* " + $autorun.caption
-		"** Location: " + $autorun.location
-		"** Command: " + $autorun.command
+		"** Location     : " + $autorun.location
+		"** Command      : " + $autorun.command
 		" "
 	}
 }
+
+$NonDefaultServices = Get-WmiObject win32_service | where { $_.Caption -notmatch "Windows" -and $_.PathName -notmatch "Windows"  `
+-and $_.PathName -notmatch "policyhost.exe" -and $_.Name -ne "LSM" -and $_.PathName -notmatch "OSE.EXE" -and $_.PathName -notmatch  `
+"OSPPSVC.EXE" -and $_.PathName -notmatch "Microsoft Security Client" -and $_.Name -notlike "*edge*"  -and $_.Name -notlike "ClickToRunSvc" `
+-and $_.Name -notlike "*Mozilla*" -and $_.PathName -notmatch "armsvc.exe"}
+
+if($NonDefaultServices){
+	"=== Services ==="
+	foreach ($service in $NonDefaultServices){
+		"* " + $service.DisplayName
+		"** Command      : " + $service.PathName
+		"** StartUp      : " + $service.StartMode
+		"** Account      : " + $service.StartName
+		#"** State        : " + $service.State
+		#"** Status       : " + $service.Status
+		#"** Started      : " + $service.Started
+		#"** Description  : " + $service.Description
+		if ($service.PathName -notmatch '"'){
+		"** Vulnerable   : Yes"
+		}
+		" "
+	}	
+}
+
 
 " "
 "******************************** [/" + $hostname + "] ********************************"
