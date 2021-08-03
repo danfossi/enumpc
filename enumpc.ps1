@@ -195,7 +195,7 @@ if (Test-Path -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\"){
 		"== Windows Update Settings =="
 		"* WSUS Enabled  : Yes"
 		"* Server        : " + (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\" -Name WuServer).WuServer
-		"* Satus Server  : " + (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\" -Name WuStatusServer).WuStatusServer
+		"* Status Server  : " + (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\" -Name WuStatusServer).WuStatusServer
 		if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\" -Name TargetGroupEnabled).TargetGroupEnabled -eq 1){
 			"* Use Target    : Yes"
 			"* Target Name   : " + (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\" -Name TargetGroup).TargetGroup
