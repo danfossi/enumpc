@@ -1,7 +1,7 @@
 # description		: Extract PC info
 # author(s)		: Dennis Anfossi
 # date			: 29/04/2021
-# version		: 0.2.3
+# version		: 0.2.4
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
 #			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
@@ -44,13 +44,24 @@ else{
 
 if ($win_is_compatible -match "True"){
 	"== PowerShell =="
+	"=== Policy ==="
 	"* Execution     : " + (Get-ExecutionPolicy)
+	" "
+	"=== Remote Management ==="
 	Invoke-Command -ComputerName $hostname { 1 } 2>&1>$null
 	if ($? -eq "True"){
 		"* PSRemoting    : Enabled"
 	}
 	else{
 		"* PSRemoting    : Disabled"
+	}
+	" "
+	$providers = Get-PackageProvider
+	if ($providers){
+		"=== Package Providers ==="
+		foreach ($provider in $providers){
+			"* " + $provider.name + " (Version: " + $provider.version + ")"
+		}
 	}
 }
 " "
@@ -68,12 +79,15 @@ if ($win_is_compatible -match "True"){
 }
 
 "== CPU(s) == "
-$cpu = Get-WmiObject -class win32_processor
-"* CPU Type      : " + ($ci).CsProcessors.name 
-"* CPU Speed     : " + $($cpu.CurrentClockSpeed) + " MHz"
-"* Cores         : " + ($cpu.NumberOfCores)
-"* Architecture  : " + ($cpu.AddressWidth) + " bit"
-" "
+$cpus = Get-WmiObject -class win32_processor
+foreach ($cpu in $cpus){
+	"* DeviceID       : " + ($cpu.DeviceID)
+	"** CPU Type      : " + ($ci).CsProcessors.name 
+	"** CPU Speed     : " + ($cpu.CurrentClockSpeed) + " MHz"
+	"** Cores         : " + ($cpu.NumberOfCores)
+	"** Architecture  : " + ($cpu.AddressWidth) + " bit"
+	" "
+}
 
 "== RAM == "
 $totalram = Get-WmiObject -Class Win32_ComputerSystem
