@@ -1,7 +1,7 @@
 # description		: Extract PC info
 # author(s)		: Dennis Anfossi
 # date			: 29/04/2021
-# version		: 0.2.3
+# version		: 0.2.4
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
 #			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
