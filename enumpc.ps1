@@ -1,7 +1,7 @@
 # description		: Extract PC info
 # author(s)		: Dennis Anfossi
 # date			: 29/04/2021
-# version		: 0.2.4
+# version		: 0.2.5
 # license		: GPLv2
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
 #			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
@@ -11,7 +11,7 @@
 Clear-Host
 Write-Host -ForegroundColor Green -NoNewline "Running script, please wait.."
 $ci = Get-ComputerInfo
-$hostname = Invoke-Command -ScriptBlock {hostname}
+$hostname = ($ci).csName
 $os = ($ci).WindowsCurrentVersion
 
 if ($os -ge 6.1){
@@ -39,7 +39,10 @@ else{
 "* Architecture  : " + ($ci).OsArchitecture
 "* Last boot     : " + ($ci).OsLastBootUpTime
 "* Hostname      : " + ($ci).csName
-"* Description   : " + (Get-WmiObject -Class Win32_OperatingSystem).Description
+$description = (Get-WmiObject -Class Win32_OperatingSystem).Description
+if ($description){
+	"* Description   : " + $description
+}
 " "
 
 if ($win_is_compatible -match "True"){
@@ -81,11 +84,11 @@ if ($win_is_compatible -match "True"){
 "== CPU(s) == "
 $cpus = Get-WmiObject -class win32_processor
 foreach ($cpu in $cpus){
-	"* DeviceID       : " + ($cpu.DeviceID)
-	"** CPU Type      : " + ($ci).CsProcessors.name 
-	"** CPU Speed     : " + ($cpu.CurrentClockSpeed) + " MHz"
-	"** Cores         : " + ($cpu.NumberOfCores)
-	"** Architecture  : " + ($cpu.AddressWidth) + " bit"
+	"* DeviceID      : " + ($cpu.DeviceID)
+	"** CPU Type     : " + ($ci).CsProcessors.name 
+	"** CPU Speed    : " + ($cpu.CurrentClockSpeed) + " MHz"
+	"** Cores        : " + ($cpu.NumberOfCores)
+	"** Architecture : " + ($cpu.AddressWidth) + " bit"
 	" "
 }
 
@@ -140,6 +143,7 @@ foreach ($adapter in $adapters){
 	$netmask = $adapter | Get-NetIPAddress -AddressFamily IPv4 | select PrefixLength
 	$dns = Get-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -AddressFamily Ipv4 | select ServerAddresses
 	$advanced = Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where{($_.Description -eq $adapter.ifDesc)}
+	$wol = ($adapter | Get-NetAdapterAdvancedProperty -RegistryKeyword "*WakeOnMagicPacket").RegistryValue 2>$null
 	"* Interface     : " + $adapter.InterfaceDescription
 	"** IP Address   : " + $ip.IPAddress
 	"** Netmask      : " + $netmask.PrefixLength
@@ -153,7 +157,9 @@ foreach ($adapter in $adapters){
 		}
 	"** MAC Address  : " + $adapter.MacAddress -replace "-",":"
 	"** Profile Type : " + ($adapter | Get-NetConnectionProfile).NetworkCategory
-	"** WOL Enabled  : " + ($adapter | Get-NetAdapterAdvancedProperty -RegistryKeyword "*WakeOnMagicPacket").RegistryValue 2>$null
+	if ($wol -eq "1" -or $wol -eq "0"){
+	"** WOL Enabled  : " + $wol
+	}
 	"** DHCP         : " + ($adapter | Get-NetIPInterface -AddressFamily IPv4).Dhcp
 	if (($adapter | Get-NetIPInterface -AddressFamily IPv4).Dhcp -eq "Enabled"){
 		"** DHCP Server  : " + $advanced.DHCPServer
@@ -261,7 +267,6 @@ if($NonDefaultServices){
 		" "
 	}	
 }
-
 
 " "
 "******************************** [/" + $hostname + "] ********************************"
