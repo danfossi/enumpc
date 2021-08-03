@@ -6,10 +6,10 @@
 # usage			: powershell -Noexit <path>\<to>\<script>.ps1
 #			: powershell <path>\<to>\<script>.ps1 | out-file -filepath "C:\outfile.log"
 #			: cmd.exe /c @powershell -Noexit <path>\<to>\<script>.ps1
-###########################################################
+###################################################################################################
 
-#Clear-Host
-#Write-Host -ForegroundColor Green -NoNewline "Running script, please wait.."
+Clear-Host
+Write-Host -ForegroundColor Green -NoNewline "Running script, please wait.."
 $ci = Get-ComputerInfo
 $hostname = Invoke-Command -ScriptBlock {hostname}
 $os = ($ci).WindowsCurrentVersion
@@ -116,7 +116,7 @@ Get-WmiObject Win32_DiskDrive | sort DeviceID | ForEach-Object {
 			"=== " + $_.VolumeName + " ==="
 			"* Disk Number   : " + ($disk.DeviceID -replace '^[^PHYSICALDRIVE]*PHYSICALDRIVE', 'Disk ')
 			"* Disk Model    : " + $disk.Model
-			"* Disk Status   : " + $(Get-Disk -Number ($disk.DeviceID -replace '^[^PHYSICALDRIVE]*PHYSICALDRIVE', '')).HealthStatus
+			"* Disk Status   : " + $(Get-Disk -Number ($disk.DeviceID -replace '^[^PHYSICALDRIVE]*PHYSICALDRIVE', '')).HealthStatus 2>$null
 			"* Disk Size     : " + $([math]::Round($disk.Size / 1gb,2)) + "Gb"
 			"* Partition     : " + $($partition.Name -replace '^[^,]*,', '' -replace " ","")
 			"* Type          : " + $partition.type
@@ -242,25 +242,23 @@ if ($autoruns){
 $NonDefaultServices = Get-WmiObject win32_service | where { $_.Caption -notmatch "Windows" -and $_.PathName -notmatch "Windows"  `
 -and $_.PathName -notmatch "policyhost.exe" -and $_.Name -ne "LSM" -and $_.PathName -notmatch "OSE.EXE" -and $_.PathName -notmatch  `
 "OSPPSVC.EXE" -and $_.PathName -notmatch "Microsoft Security Client" -and $_.Name -notlike "*edge*"  -and $_.Name -notlike "ClickToRunSvc" `
--and $_.Name -notlike "*Mozilla*" -and $_.PathName -notmatch "armsvc.exe"}
+-and $_.Name -notlike "*Mozilla*" -and $_.PathName -notmatch "armsvc.exe" -and $_.StartMode -eq "Auto" }
 
 if($NonDefaultServices){
 	"=== Services ==="
 	foreach ($service in $NonDefaultServices){
-		if ($service.StartMode -eq "Auto"){
-			"* " + $service.DisplayName
-			"** Command      : " + $service.PathName
-			"** StartUp      : " + $service.StartMode
-			"** Account      : " + $service.StartName
-			#"** State        : " + $service.State
-			#"** Status       : " + $service.Status
-			#"** Started      : " + $service.Started
-			#"** Description  : " + $service.Description
-			if ($service.PathName -notmatch '"'){
-			"** Vulnerable   : Yes"
-			}
-		" "
+		"* " + $service.DisplayName
+		"** Command      : " + $service.PathName
+		"** StartUp      : " + $service.StartMode
+		"** Account      : " + $service.StartName
+		#"** State        : " + $service.State
+		#"** Status       : " + $service.Status
+		#"** Started      : " + $service.Started
+		#"** Description  : " + $service.Description
+		if ($service.PathName -notmatch '"'){
+		"** Vulnerable   : Yes"
 		}
+		" "
 	}	
 }
 
